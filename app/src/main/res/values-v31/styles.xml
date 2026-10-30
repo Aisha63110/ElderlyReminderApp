@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.ElderlyReminderApp.Splash"
+        parent="Theme.ElderlyReminderApp">
+
+        <item name="android:windowSplashScreenBackground">#FFF9F0</item>
+
+        <item name="android:windowSplashScreenAnimatedIcon">
+            @android:color/transparent
+        </item>
+
+    </style>
+
+</resources>

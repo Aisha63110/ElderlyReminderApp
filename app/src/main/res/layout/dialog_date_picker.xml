@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="18dp"
+    android:background="#FFF9F0">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🌷 Choose your date"
+        android:textColor="#2D5C44"
+        android:textSize="23sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:paddingBottom="12dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <NumberPicker
+            android:id="@+id/day_picker"
+            android:layout_width="0dp"
+            android:layout_height="170dp"
+            android:layout_weight="1" />
+
+        <NumberPicker
+            android:id="@+id/month_picker"
+            android:layout_width="0dp"
+            android:layout_height="170dp"
+            android:layout_weight="1" />
+
+        <NumberPicker
+            android:id="@+id/year_picker"
+            android:layout_width="0dp"
+            android:layout_height="170dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Scroll each column to select"
+        android:textColor="#927D70"
+        android:textSize="15sp"
+        android:gravity="center"
+        android:paddingTop="8dp" />
+
+</LinearLayout>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="18dp"
+    android:background="#FFF9F0">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🌷 Choose your time"
+        android:textColor="#2D5C44"
+        android:textSize="23sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:paddingBottom="12dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <NumberPicker
+            android:id="@+id/hour_picker"
+            android:layout_width="85dp"
+            android:layout_height="170dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=":"
+            android:textSize="28sp"
+            android:textColor="#2D5C44" />
+
+        <NumberPicker
+            android:id="@+id/minute_picker"
+            android:layout_width="85dp"
+            android:layout_height="170dp" />
+
+        <NumberPicker
+            android:id="@+id/ampm_picker"
+            android:layout_width="85dp"
+            android:layout_height="170dp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Scroll to choose the hour and minute"
+        android:textColor="#927D70"
+        android:textSize="15sp"
+        android:gravity="center"
+        android:paddingTop="8dp" />
+
+</LinearLayout>
