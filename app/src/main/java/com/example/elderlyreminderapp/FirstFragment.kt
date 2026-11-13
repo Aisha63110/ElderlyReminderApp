@@ -1,4 +1,3 @@
-
 package com.example.elderlyreminderapp
 
 import android.Manifest
@@ -30,6 +29,8 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.elderlyreminderapp.databinding.FragmentFirstBinding
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 class FirstFragment : Fragment() {
@@ -108,20 +109,7 @@ class FirstFragment : Fragment() {
                     ?.firstOrNull()
 
                 if (!spokenWords.isNullOrBlank()) {
-
-                    speakResponse(
-                        if (isKiswahili) {
-                            "Umesema: $spokenWords"
-                        } else {
-                            "You said: $spokenWords"
-                        }
-                    )
-
-                    Toast.makeText(
-                        requireContext(),
-                        spokenWords,
-                        Toast.LENGTH_LONG
-                    ).show()
+                    handleVoiceCommand(spokenWords)
                 }
             }
         }
@@ -158,9 +146,9 @@ class FirstFragment : Fragment() {
             }
         }
 
-        // Add Reminder button
         updateButtonTexts()
 
+        // Add Reminder button
         binding.buttonFirst.setOnClickListener {
             findNavController().navigate(
                 R.id.action_FirstFragment_to_SecondFragment
@@ -242,6 +230,272 @@ class FirstFragment : Fragment() {
                 Toast.LENGTH_LONG
             ).show()
         }
+    }
+
+    // Understand and respond to voice commands
+    private fun handleVoiceCommand(spokenWords: String) {
+
+        val command = spokenWords.lowercase(Locale.ROOT).trim()
+
+        // Show saved reminders
+        if (
+            command.contains("show reminders") ||
+            command.contains("my reminders") ||
+            command.contains("what reminders") ||
+            command.contains("onyesha vikumbusho") ||
+            command.contains("vikumbusho vyangu")
+        ) {
+
+            val reminders =
+                ReminderStorage.getReminders(requireContext())
+
+            if (reminders.isEmpty()) {
+
+                speakResponse(
+                    if (isKiswahili) {
+                        "Huna vikumbusho kwa sasa."
+                    } else {
+                        "You do not have any reminders yet."
+                    }
+                )
+
+            } else {
+
+                val response = reminders.joinToString(". ") {
+                    "${it.title}, on ${it.date}, at ${it.time}"
+                }
+
+                speakResponse(
+                    if (isKiswahili) {
+                        "Vikumbusho vyako ni: $response"
+                    } else {
+                        "Here are your reminders: $response"
+                    }
+                )
+            }
+
+            return
+        }
+
+        // Open Add Reminder screen
+        if (
+            command.contains("add reminder") ||
+            command.contains("create reminder") ||
+            command.contains("ongeza kikumbusho")
+        ) {
+
+            speakResponse(
+                if (isKiswahili) {
+                    "Tafadhali jaza maelezo ya kikumbusho."
+                } else {
+                    "Let's add a reminder. Please enter its details."
+                }
+            )
+
+            findNavController().navigate(
+                R.id.action_FirstFragment_to_SecondFragment
+            )
+
+            return
+        }
+
+        // Help command
+        if (
+            command.contains("help") ||
+            command.contains("what can you do") ||
+            command.contains("msaada")
+        ) {
+
+            speakResponse(
+                if (isKiswahili) {
+                    "Naweza kukuonyesha vikumbusho vyako au kukusaidia kuongeza kikumbusho."
+                } else {
+                    "I can show your reminders, help you add a reminder, or tell you how to use the app."
+                }
+            )
+
+            return
+        }
+
+        // Create a reminder from a spoken instruction
+        if (
+            command.contains("remind me to") ||
+            command.contains("nikumbushe")
+        ) {
+            createReminderFromVoice(spokenWords)
+            return
+        }
+
+        // Unrecognised command
+        speakResponse(
+            if (isKiswahili) {
+                "Samahani, sikuelewa. Unaweza kurudia?"
+            } else {
+                "Sorry, I did not understand that. Please try again. You can say, show my reminders, or add a reminder."
+            }
+        )
+    }
+
+    // Create a reminder using a spoken instruction
+    private fun createReminderFromVoice(spokenWords: String) {
+
+        val command = spokenWords.trim()
+
+        // Determine the reminder date
+        val dateCalendar = Calendar.getInstance()
+
+        when {
+            command.contains("tomorrow", ignoreCase = true) -> {
+                dateCalendar.add(Calendar.DAY_OF_YEAR, 1)
+            }
+
+            command.contains("today", ignoreCase = true) -> {
+                // Keep today's date
+            }
+
+            else -> {
+                speakResponse(
+                    "Please say today or tomorrow when setting a reminder."
+                )
+                return
+            }
+        }
+
+        // Recognise times such as 8 AM or 8:30 PM
+        val timePattern = Regex(
+            """\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b""",
+            RegexOption.IGNORE_CASE
+        )
+
+        val timeMatch = timePattern.find(command)
+
+        if (timeMatch == null) {
+            speakResponse(
+                "Please include a time, for example, 8 AM or 8:30 PM."
+            )
+            return
+        }
+
+        var hour = timeMatch.groupValues[1].toInt()
+
+        val minute = timeMatch.groupValues[2]
+            .ifBlank { "0" }
+            .toInt()
+
+        val amPm = timeMatch.groupValues[3].lowercase(Locale.ROOT)
+
+        if (hour !in 1..12 || minute !in 0..59) {
+            speakResponse(
+                "That time is not valid. Please try again."
+            )
+            return
+        }
+
+        if (amPm == "pm" && hour != 12) {
+            hour += 12
+        } else if (amPm == "am" && hour == 12) {
+            hour = 0
+        }
+
+        // Extract the reminder description
+        val titleStart = Regex(
+            """(?i)\bremind me to\b"""
+        ).find(command)
+
+        if (titleStart == null) {
+            speakResponse(
+                "Please start by saying, remind me to..."
+            )
+            return
+        }
+
+        var title = command.substring(titleStart.range.last + 1)
+
+        title = title.replace(
+            Regex("""(?i)\b(today|tomorrow)\b"""),
+            ""
+        )
+
+        title = title.replace(timePattern, "")
+            .replace(Regex("""(?i)\bat\b"""), "")
+            .trim()
+            .trim(',', '.', ' ')
+
+        if (title.isBlank()) {
+            speakResponse(
+                "Please tell me what I should remind you about."
+            )
+            return
+        }
+
+        // Set the reminder time
+        dateCalendar.set(Calendar.HOUR_OF_DAY, hour)
+        dateCalendar.set(Calendar.MINUTE, minute)
+        dateCalendar.set(Calendar.SECOND, 0)
+        dateCalendar.set(Calendar.MILLISECOND, 0)
+
+        if (dateCalendar.timeInMillis <= System.currentTimeMillis()) {
+            speakResponse(
+                "That time has already passed. Please choose a future time."
+            )
+            return
+        }
+
+        val date = SimpleDateFormat(
+            "yyyy-MM-dd",
+            Locale.US
+        ).format(dateCalendar.time)
+
+        val time = String.format(
+            Locale.US,
+            "%02d:%02d",
+            hour,
+            minute
+        )
+
+        val reminder = Reminder(
+            title = title,
+            date = date,
+            time = time,
+            repeatType = "None"
+        )
+
+        // Confirm before saving
+        AlertDialog.Builder(requireContext())
+            .setTitle("Confirm reminder")
+            .setMessage(
+                "Should I remind you to $title on $date at $time?"
+            )
+            .setPositiveButton("Yes, save") { _, _ ->
+
+                ReminderStorage.addReminder(
+                    requireContext(),
+                    reminder
+                )
+
+                val scheduled = ReminderScheduler.scheduleReminder(
+                    requireContext(),
+                    title,
+                    date,
+                    time
+                )
+
+                displayReminders()
+
+                speakResponse(
+                    if (scheduled) {
+                        "Your reminder for $title has been saved and scheduled."
+                    } else {
+                        "Your reminder for $title has been saved, but its notification could not be scheduled."
+                    }
+                )
+            }
+            .setNegativeButton("Cancel") { _, _ ->
+                speakResponse(
+                    "Okay, I have cancelled that reminder."
+                )
+            }
+            .show()
     }
 
     // Choose the speaking language
@@ -396,7 +650,7 @@ class FirstFragment : Fragment() {
                 )
             }
 
-            // Proper three-dot icon button
+            // Three-dot icon button
             val moreButton = ImageButton(requireContext()).apply {
 
                 setImageResource(R.drawable.ic_more_vert)
@@ -492,9 +746,9 @@ class FirstFragment : Fragment() {
             val timeText = TextView(requireContext()).apply {
 
                 text = if (isKiswahili) {
-                    "⏰ Saa: ${reminder.time}"
+                    "🕒 Saa: ${reminder.time}"
                 } else {
-                    "⏰ ${reminder.time}"
+                    "🕒 ${reminder.time}"
                 }
 
                 textSize = 17f
@@ -516,13 +770,11 @@ class FirstFragment : Fragment() {
             }
 
             binding.remindersContainer.addView(card, params)
-
         }
-        TextSizeHelper.apply(binding.root, requireContext())
 
+        TextSizeHelper.apply(binding.root, requireContext())
     }
 
-    // Open the Edit Reminder screen
     // Open the Edit Reminder screen
     private fun editReminder(reminder: Reminder) {
 
