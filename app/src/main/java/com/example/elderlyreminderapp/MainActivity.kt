@@ -6,15 +6,12 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.example.elderlyreminderapp.databinding.ActivityMainBinding
-import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,21 +25,6 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
-            val systemBars = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars()
-            )
-
-            v.setPadding(
-                systemBars.left,
-                systemBars.top,
-                systemBars.right,
-                systemBars.bottom
-            )
-
-            insets
-        }
 
         setSupportActionBar(binding.toolbar)
 
@@ -60,34 +42,80 @@ class MainActivity : AppCompatActivity() {
             appBarConfiguration
         )
 
-        binding.fab.setOnClickListener { view ->
+        // Refresh toolbar menu whenever the user changes screens
+        navController.addOnDestinationChangedListener {
+                _, _, _ ->
+            invalidateOptionsMenu()
+        }
 
-            Snackbar.make(
-                view,
-                "Replace with your own action",
-                Snackbar.LENGTH_LONG
-            )
-                .setAction("Action", null)
-                .setAnchorView(R.id.fab)
-                .show()
+        binding.fab.setOnClickListener {
+            // Keep existing FAB behaviour here if needed.
         }
     }
 
+    // Create the Options Menu
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
         return true
     }
 
+    // Show or hide menu items depending on the current screen
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+
+        val navController =
+            findNavController(R.id.nav_host_fragment_content_main)
+
+        val currentScreen = navController.currentDestination?.id
+
+        // Hide Add Reminder while already on the Add/Edit screen
+        menu.findItem(R.id.action_add)?.isVisible =
+            currentScreen != R.id.SecondFragment
+
+        // Hide Settings while already on Settings
+        menu.findItem(R.id.action_settings)?.isVisible =
+            currentScreen != R.id.SettingsFragment
+
+        // Hide About while already on About
+        menu.findItem(R.id.action_about)?.isVisible =
+            currentScreen != R.id.AboutFragment
+
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    // Handle menu clicks
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        val navController =
+            findNavController(R.id.nav_host_fragment_content_main)
 
         return when (item.itemId) {
 
-            R.id.action_settings -> true
+            R.id.action_add -> {
+                if (navController.currentDestination?.id != R.id.SecondFragment) {
+                    navController.navigate(R.id.SecondFragment)
+                }
+                true
+            }
+
+            R.id.action_settings -> {
+                if (navController.currentDestination?.id != R.id.SettingsFragment) {
+                    navController.navigate(R.id.SettingsFragment)
+                }
+                true
+            }
+
+            R.id.action_about -> {
+                if (navController.currentDestination?.id != R.id.AboutFragment) {
+                    navController.navigate(R.id.AboutFragment)
+                }
+                true
+            }
 
             else -> super.onOptionsItemSelected(item)
         }
     }
 
+    // Handle toolbar Back navigation
     override fun onSupportNavigateUp(): Boolean {
 
         val navController =

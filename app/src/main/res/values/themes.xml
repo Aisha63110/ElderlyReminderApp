@@ -1,13 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.ElderlyReminderApp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+    <style name="Base.Theme.ElderlyReminderApp"
+        parent="Theme.Material3.DayNight.NoActionBar">
     </style>
 
-    <style name="Theme.ElderlyReminderApp" parent="Base.Theme.ElderlyReminderApp" />
+    <style name="Theme.ElderlyReminderApp"
+        parent="Base.Theme.ElderlyReminderApp" />
 
-    <style name="ReminderDialogTheme" parent="@android:style/Theme.Material.Light.Dialog.Alert">
+    <style name="Theme.ElderlyReminderApp.Splash"
+        parent="Base.Theme.ElderlyReminderApp">
+
+        <item name="android:windowBackground">#FFF9F0</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+
+    <style name="ReminderDialogTheme"
+        parent="@android:style/Theme.Material.Light.Dialog.Alert">
         <item name="android:colorAccent">#2D5C44</item>
     </style>
+
 </resources>

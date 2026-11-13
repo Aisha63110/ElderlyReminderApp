@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF9F0">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🌷"
+            android:textSize="65sp"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="12dp"/>
+
+        <TextView
+            android:id="@+id/txtAboutTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="About Elderly Reminder"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#2D5C44"
+            android:gravity="center"
+            android:layout_marginBottom="15dp"/>
+
+        <TextView
+            android:id="@+id/txtAboutDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="A simple and friendly reminder app designed to help older adults remember their daily activities."
+            android:textSize="18sp"
+            android:textColor="#8A8277"
+            android:gravity="center"
+            android:lineSpacingExtra="5dp"
+            android:layout_marginBottom="28dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="💚 What the app offers"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#2D5C44"
+            android:layout_marginBottom="15dp"/>
+
+        <TextView
+            android:id="@+id/txtFeatures"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🌼 Add daily reminders\n\n📅 Choose reminder dates and times\n\n🔔 Receive reminder notifications\n\n✏️ Edit existing reminders\n\n🗑️ Delete reminders\n\n🎤 Use voice assistance\n\n🌍 Choose between English and Kiswahili"
+            android:textSize="18sp"
+            android:textColor="#2D5C44"
+            android:lineSpacingExtra="7dp"
+            android:layout_marginBottom="30dp"/>
+
+        <TextView
+            android:id="@+id/txtAboutTagline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Made to make everyday routines easier. 💚"
+            android:textSize="17sp"
+            android:textStyle="italic"
+            android:textColor="#63836A"
+            android:gravity="center"
+            android:layout_marginBottom="30dp"/>
+
+        <Button
+            android:id="@+id/btnBackAbout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="← Back to Home"
+            android:textSize="18sp"/>
+
+    </LinearLayout>
+
+</ScrollView>

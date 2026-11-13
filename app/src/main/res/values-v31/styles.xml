@@ -4,11 +4,20 @@
     <style name="Theme.ElderlyReminderApp.Splash"
         parent="Theme.ElderlyReminderApp">
 
+        <!-- Match the custom splash background -->
         <item name="android:windowSplashScreenBackground">#FFF9F0</item>
 
-        <item name="android:windowSplashScreenAnimatedIcon">
-            @android:color/transparent
-        </item>
+        <!-- Use the same app logo -->
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+
+        <!-- Match the logo background -->
+        <item name="android:windowSplashScreenIconBackgroundColor">#FFF9F0</item>
+
+        <!-- Match the activity background -->
+        <item name="android:windowBackground">#FFF9F0</item>
+
+        <!-- Keep the splash transition short -->
+        <item name="android:windowSplashScreenAnimationDuration">200</item>
 
     </style>
 

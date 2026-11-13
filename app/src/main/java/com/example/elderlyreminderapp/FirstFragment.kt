@@ -13,11 +13,16 @@ import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
+import android.view.ContextMenu
+import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,13 +38,18 @@ class FirstFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var isKiswahili = false
+    private var selectedReminder: Reminder? = null
     private var textToSpeech: TextToSpeech? = null
 
-    // Soft, elderly-friendly colours
+    companion object {
+        private const val CONTEXT_EDIT = 1001
+        private const val CONTEXT_DELETE = 1002
+    }
+
+    // Colours
     private val darkGreen = Color.rgb(45, 92, 68)
     private val cream = Color.rgb(255, 250, 240)
     private val softGreen = Color.rgb(231, 243, 232)
-    private val softPink = Color.rgb(255, 232, 235)
     private val darkText = Color.rgb(48, 57, 49)
 
     // Notification permission
@@ -47,6 +57,7 @@ class FirstFragment : Fragment() {
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { granted ->
+
             if (granted) {
                 Toast.makeText(
                     requireContext(),
@@ -70,6 +81,7 @@ class FirstFragment : Fragment() {
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { granted ->
+
             if (granted) {
                 startVoiceRecognition()
             } else {
@@ -135,6 +147,8 @@ class FirstFragment : Fragment() {
     ) {
         super.onViewCreated(view, savedInstanceState)
 
+        isKiswahili = AppPreferences.isKiswahili(requireContext())
+
         binding.root.setBackgroundColor(cream)
 
         // Initialise Text-to-Speech
@@ -144,43 +158,16 @@ class FirstFragment : Fragment() {
             }
         }
 
-        binding.buttonFirst.text =
-            if (isKiswahili) {
-                "➕ Ongeza Kikumbusho"
-            } else {
-                "➕ Add a Reminder"
-            }
+        // Add Reminder button
+        updateButtonTexts()
 
-        // Open Add Reminder screen
         binding.buttonFirst.setOnClickListener {
             findNavController().navigate(
                 R.id.action_FirstFragment_to_SecondFragment
             )
         }
 
-        // Language switch
-        binding.languageButton.text = "🌍 Language: English"
-        binding.assistantButton.text = "💬 Talk to Assistant"
-
-        binding.languageButton.setOnClickListener {
-
-            isKiswahili = !isKiswahili
-
-            if (isKiswahili) {
-                binding.languageButton.text = "🌍 Lugha: Kiswahili"
-                binding.assistantButton.text = "🎤 Zungumza na Msaidizi"
-                binding.buttonFirst.text = "➕ Ongeza Kikumbusho"
-            } else {
-                binding.languageButton.text = "🌍 Language: English"
-                binding.assistantButton.text = "🎤 Talk to Assistant"
-                binding.buttonFirst.text = "➕ Add a Reminder"
-            }
-
-            setSpeechLanguage()
-            displayReminders()
-        }
-
-        // Voice assistant
+        // Voice Assistant button
         binding.assistantButton.setOnClickListener {
 
             val permission = Manifest.permission.RECORD_AUDIO
@@ -201,6 +188,24 @@ class FirstFragment : Fragment() {
         displayReminders()
     }
 
+    // Update button language
+    private fun updateButtonTexts() {
+
+        binding.buttonFirst.text =
+            if (isKiswahili) {
+                "➕ Ongeza Kikumbusho"
+            } else {
+                "➕ Add a Reminder"
+            }
+
+        binding.assistantButton.text =
+            if (isKiswahili) {
+                "🎤 Zungumza na Msaidizi"
+            } else {
+                "🎤 Talk to Assistant"
+            }
+    }
+
     // Start listening to the user's voice
     private fun startVoiceRecognition() {
 
@@ -215,7 +220,7 @@ class FirstFragment : Fragment() {
 
             putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE,
-                if (isKiswahili) "sw-KE" else "en-KE"
+                if (isKiswahili) "sw-KE" else "en-US"
             )
 
             putExtra(
@@ -275,6 +280,7 @@ class FirstFragment : Fragment() {
         )
     }
 
+    // Request notification permission
     private fun requestNotificationPermission() {
 
         if (Build.VERSION.SDK_INT >= 33) {
@@ -293,14 +299,21 @@ class FirstFragment : Fragment() {
         }
     }
 
+    // Refresh language and reminders when returning Home
     override fun onResume() {
         super.onResume()
 
         if (_binding != null) {
+
+            isKiswahili = AppPreferences.isKiswahili(requireContext())
+
+            setSpeechLanguage()
+            updateButtonTexts()
             displayReminders()
         }
     }
 
+    // Create rounded backgrounds
     private fun makeRoundedBackground(
         backgroundColor: Int,
         strokeColor: Int = backgroundColor
@@ -308,11 +321,12 @@ class FirstFragment : Fragment() {
 
         return GradientDrawable().apply {
             setColor(backgroundColor)
-            cornerRadius = 28f
+            cornerRadius = 24f
             setStroke(2, strokeColor)
         }
     }
 
+    // Display saved reminders
     private fun displayReminders() {
 
         val reminders =
@@ -322,6 +336,7 @@ class FirstFragment : Fragment() {
         binding.remindersContainer.orientation =
             LinearLayout.VERTICAL
 
+        // Empty reminders message
         binding.emptyRemindersText.apply {
 
             visibility = if (reminders.isEmpty()) {
@@ -340,212 +355,309 @@ class FirstFragment : Fragment() {
 
             textSize = 20f
             setTextColor(darkGreen)
-            gravity = android.view.Gravity.CENTER
+            gravity = Gravity.CENTER
             setPadding(24, 32, 24, 32)
         }
 
+        // Create a card for each reminder
         for (reminder in reminders) {
 
-            // Reminder card
+            // Main reminder card
             val card = LinearLayout(requireContext()).apply {
                 orientation = LinearLayout.VERTICAL
-                setPadding(24, 24, 24, 20)
-
+                setPadding(18, 16, 18, 16)
                 background = makeRoundedBackground(
                     softGreen,
                     Color.rgb(195, 220, 198)
                 )
-
-                elevation = 4f
+                elevation = 3f
+                tag = reminder
             }
 
-            // Reminder title
+            // Long-press opens the Context Menu
+            registerForContextMenu(card)
+
+            // Header row: title and three-dot icon
+            val header = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+
             val titleText = TextView(requireContext()).apply {
                 text = "🌷 ${reminder.title}"
-                textSize = 23f
+                textSize = 21f
                 setTextColor(darkGreen)
                 setTypeface(null, Typeface.BOLD)
-                setPadding(0, 0, 0, 12)
+
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
             }
 
-            // Reminder date
+            // Proper three-dot icon button
+            val moreButton = ImageButton(requireContext()).apply {
+
+                setImageResource(R.drawable.ic_more_vert)
+
+                background = makeRoundedBackground(
+                    cream,
+                    Color.rgb(195, 220, 198)
+                )
+
+                scaleType =
+                    android.widget.ImageView.ScaleType.CENTER
+
+                setPadding(8, 8, 8, 8)
+
+                layoutParams = LinearLayout.LayoutParams(
+                    44,
+                    44
+                )
+
+                contentDescription = if (isKiswahili) {
+                    "Chaguo zaidi"
+                } else {
+                    "More options"
+                }
+            }
+
+            // Popup Menu
+            moreButton.setOnClickListener { button ->
+
+                val popup = PopupMenu(requireContext(), button)
+
+                popup.menu.add(
+                    Menu.NONE,
+                    CONTEXT_EDIT,
+                    Menu.NONE,
+                    if (isKiswahili) {
+                        "✏️ Hariri Kikumbusho"
+                    } else {
+                        "✏️ Edit Reminder"
+                    }
+                )
+
+                popup.menu.add(
+                    Menu.NONE,
+                    CONTEXT_DELETE,
+                    Menu.NONE,
+                    if (isKiswahili) {
+                        "🗑️ Futa Kikumbusho"
+                    } else {
+                        "🗑️ Delete Reminder"
+                    }
+                )
+
+                popup.setOnMenuItemClickListener { item ->
+
+                    when (item.itemId) {
+
+                        CONTEXT_EDIT -> {
+                            editReminder(reminder)
+                            true
+                        }
+
+                        CONTEXT_DELETE -> {
+                            confirmDeleteReminder(reminder)
+                            true
+                        }
+
+                        else -> false
+                    }
+                }
+
+                popup.show()
+            }
+
+            header.addView(titleText)
+            header.addView(moreButton)
+
+            // Date
             val dateText = TextView(requireContext()).apply {
 
                 text = if (isKiswahili) {
                     "📅 Tarehe: ${reminder.date}"
                 } else {
-                    "📅 Date: ${reminder.date}"
+                    "📅 ${reminder.date}"
                 }
 
-                textSize = 19f
+                textSize = 17f
                 setTextColor(darkText)
-                setPadding(0, 4, 0, 4)
+                setPadding(0, 10, 0, 4)
             }
 
-            // Reminder time
+            // Time
             val timeText = TextView(requireContext()).apply {
 
                 text = if (isKiswahili) {
                     "⏰ Saa: ${reminder.time}"
                 } else {
-                    "⏰ Time: ${reminder.time}"
+                    "⏰ ${reminder.time}"
                 }
 
-                textSize = 19f
+                textSize = 17f
                 setTextColor(darkText)
-                setPadding(0, 4, 0, 16)
+                setPadding(0, 4, 0, 0)
             }
 
-            card.addView(titleText)
+            card.addView(header)
             card.addView(dateText)
             card.addView(timeText)
-
-            // EDIT BUTTON
-            val editButton = Button(requireContext()).apply {
-
-                text = if (isKiswahili) {
-                    "✏️ Hariri Kikumbusho"
-                } else {
-                    "✏️ Edit Reminder"
-                }
-
-                textSize = 17f
-                isAllCaps = false
-                setTextColor(darkGreen)
-
-                background = makeRoundedBackground(
-                    softGreen,
-                    Color.rgb(160, 200, 168)
-                )
-
-                contentDescription = if (isKiswahili) {
-                    "Hariri ${reminder.title}"
-                } else {
-                    "Edit ${reminder.title}"
-                }
-            }
-
-            editButton.setOnClickListener {
-
-                val bundle = Bundle().apply {
-                    putString("edit_title", reminder.title)
-                    putString("edit_date", reminder.date)
-                    putString("edit_time", reminder.time)
-                }
-
-                findNavController().navigate(
-                    R.id.action_FirstFragment_to_SecondFragment,
-                    bundle
-                )
-            }
-
-            card.addView(editButton)
-
-            // DELETE BUTTON
-            val deleteButton = Button(requireContext()).apply {
-
-                text = if (isKiswahili) {
-                    "🗑️ Futa Kikumbusho"
-                } else {
-                    "🗑️ Delete Reminder"
-                }
-
-                textSize = 17f
-                isAllCaps = false
-                setTextColor(Color.rgb(130, 40, 55))
-
-                background = makeRoundedBackground(
-                    softPink,
-                    Color.rgb(245, 190, 200)
-                )
-
-                contentDescription = if (isKiswahili) {
-                    "Futa ${reminder.title}"
-                } else {
-                    "Delete ${reminder.title}"
-                }
-            }
-
-            deleteButton.setOnClickListener {
-
-                AlertDialog.Builder(requireContext())
-                    .setTitle(
-                        if (isKiswahili) {
-                            "Futa kikumbusho? 🌷"
-                        } else {
-                            "Delete reminder? 🌷"
-                        }
-                    )
-                    .setMessage(
-                        if (isKiswahili) {
-                            "Una uhakika unataka kufuta " +
-                                    "\"${reminder.title}\"?"
-                        } else {
-                            "Are you sure you want to delete " +
-                                    "\"${reminder.title}\"?"
-                        }
-                    )
-                    .setPositiveButton(
-                        if (isKiswahili) "Ndiyo, futa" else "Yes, delete"
-                    ) { _, _ ->
-
-                        val deleted =
-                            ReminderStorage.deleteReminder(
-                                requireContext(),
-                                reminder
-                            )
-
-                        if (deleted) {
-
-                            ReminderScheduler.cancelReminder(
-                                requireContext(),
-                                reminder
-                            )
-
-                            Toast.makeText(
-                                requireContext(),
-                                if (isKiswahili) {
-                                    "Kikumbusho kimefutwa 💗"
-                                } else {
-                                    "Reminder deleted 💗"
-                                },
-                                Toast.LENGTH_SHORT
-                            ).show()
-
-                            displayReminders()
-
-                        } else {
-
-                            Toast.makeText(
-                                requireContext(),
-                                if (isKiswahili) {
-                                    "Kikumbusho hakikuweza kufutwa."
-                                } else {
-                                    "Could not delete reminder."
-                                },
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                    .setNegativeButton(
-                        if (isKiswahili) "Ghairi" else "Cancel",
-                        null
-                    )
-                    .show()
-            }
-
-            card.addView(deleteButton)
 
             val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
-                bottomMargin = 20
-                marginStart = 12
-                marginEnd = 12
+                bottomMargin = 14
+                marginStart = 4
+                marginEnd = 4
             }
 
             binding.remindersContainer.addView(card, params)
+
+        }
+        TextSizeHelper.apply(binding.root, requireContext())
+
+    }
+
+    // Open the Edit Reminder screen
+    // Open the Edit Reminder screen
+    private fun editReminder(reminder: Reminder) {
+
+        val bundle = Bundle().apply {
+            putString("edit_title", reminder.title)
+            putString("edit_date", reminder.date)
+            putString("edit_time", reminder.time)
+            putString("edit_repeat", reminder.repeatType)
+        }
+
+        findNavController().navigate(
+            R.id.action_FirstFragment_to_SecondFragment,
+            bundle
+        )
+    }
+
+    // Confirm before deleting a reminder
+    private fun confirmDeleteReminder(reminder: Reminder) {
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(
+                if (isKiswahili) {
+                    "Futa kikumbusho?"
+                } else {
+                    "Delete reminder?"
+                }
+            )
+            .setMessage(
+                if (isKiswahili) {
+                    "Una uhakika unataka kufuta ${reminder.title}?"
+                } else {
+                    "Are you sure you want to delete ${reminder.title}?"
+                }
+            )
+            .setPositiveButton(
+                if (isKiswahili) "Ndiyo, futa" else "Yes, delete"
+            ) { _, _ ->
+
+                val deleted = ReminderStorage.deleteReminder(
+                    requireContext(),
+                    reminder
+                )
+
+                if (deleted) {
+
+                    ReminderScheduler.cancelReminder(
+                        requireContext(),
+                        reminder
+                    )
+
+                    displayReminders()
+
+                    Toast.makeText(
+                        requireContext(),
+                        if (isKiswahili) {
+                            "Kikumbusho kimefutwa 💗"
+                        } else {
+                            "Reminder deleted 💗"
+                        },
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+            .setNegativeButton(
+                if (isKiswahili) "Ghairi" else "Cancel",
+                null
+            )
+            .show()
+    }
+
+    // Context Menu appears when a reminder is long-pressed
+    override fun onCreateContextMenu(
+        menu: ContextMenu,
+        v: View,
+        menuInfo: ContextMenu.ContextMenuInfo?
+    ) {
+        super.onCreateContextMenu(menu, v, menuInfo)
+
+        selectedReminder = v.tag as? Reminder
+
+        menu.setHeaderTitle(
+            selectedReminder?.title ?: "Reminder"
+        )
+
+        menu.add(
+            Menu.NONE,
+            CONTEXT_EDIT,
+            Menu.NONE,
+            if (isKiswahili) {
+                "✏️ Hariri Kikumbusho"
+            } else {
+                "✏️ Edit Reminder"
+            }
+        )
+
+        menu.add(
+            Menu.NONE,
+            CONTEXT_DELETE,
+            Menu.NONE,
+            if (isKiswahili) {
+                "🗑️ Futa Kikumbusho"
+            } else {
+                "🗑️ Delete Reminder"
+            }
+        )
+    }
+
+    // Handle Context Menu selections
+    override fun onContextItemSelected(item: MenuItem): Boolean {
+
+        if (
+            item.itemId != CONTEXT_EDIT &&
+            item.itemId != CONTEXT_DELETE
+        ) {
+            return super.onContextItemSelected(item)
+        }
+
+        val reminder = selectedReminder
+            ?: return super.onContextItemSelected(item)
+
+        selectedReminder = null
+
+        return when (item.itemId) {
+
+            CONTEXT_EDIT -> {
+                editReminder(reminder)
+                true
+            }
+
+            CONTEXT_DELETE -> {
+                confirmDeleteReminder(reminder)
+                true
+            }
+
+            else -> super.onContextItemSelected(item)
         }
     }
 

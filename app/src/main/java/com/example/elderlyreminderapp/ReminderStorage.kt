@@ -6,7 +6,8 @@ import android.content.Context
 data class Reminder(
     val title: String,
     val date: String,
-    val time: String
+    val time: String,
+    val repeatType: String = "None"
 )
 
 object ReminderStorage {
@@ -27,9 +28,12 @@ object ReminderStorage {
             val title = prefs.getString("title_$i", null)
             val date = prefs.getString("date_$i", null)
             val time = prefs.getString("time_$i", null)
+            val repeatType = prefs.getString("repeat_$i", "None")
 
             if (title != null && date != null && time != null) {
-                reminders.add(Reminder(title, date, time))
+                reminders.add(
+                    Reminder(title, date, time, repeatType ?: "None")
+                )
             }
         }
 
@@ -48,20 +52,17 @@ object ReminderStorage {
             .putString("title_$count", reminder.title)
             .putString("date_$count", reminder.date)
             .putString("time_$count", reminder.time)
+            .putString("repeat_$count", reminder.repeatType)
             .putInt(KEY_COUNT, count + 1)
             .apply()
     }
 
-
     fun deleteReminder(context: Context, reminder: Reminder): Boolean {
         val reminders = getReminders(context).toMutableList()
 
-        // Find the reminder to delete
         val index = reminders.indexOf(reminder)
 
-        if (index == -1) {
-            return false
-        }
+        if (index == -1) return false
 
         reminders.removeAt(index)
 
@@ -73,18 +74,18 @@ object ReminderStorage {
         val oldCount = prefs.getInt(KEY_COUNT, 0)
         val editor = prefs.edit()
 
-        // Remove the old saved entries
         for (i in 0 until oldCount) {
             editor.remove("title_$i")
             editor.remove("date_$i")
             editor.remove("time_$i")
+            editor.remove("repeat_$i")
         }
 
-        // Save the remaining reminders again
         reminders.forEachIndexed { i, item ->
             editor.putString("title_$i", item.title)
             editor.putString("date_$i", item.date)
             editor.putString("time_$i", item.time)
+            editor.putString("repeat_$i", item.repeatType)
         }
 
         editor.putInt(KEY_COUNT, reminders.size)
@@ -102,9 +103,7 @@ object ReminderStorage {
 
         val index = reminders.indexOf(oldReminder)
 
-        if (index == -1) {
-            return false
-        }
+        if (index == -1) return false
 
         reminders[index] = updatedReminder
 
@@ -116,18 +115,18 @@ object ReminderStorage {
         val oldCount = prefs.getInt(KEY_COUNT, 0)
         val editor = prefs.edit()
 
-        // Remove the old saved entries
         for (i in 0 until oldCount) {
             editor.remove("title_$i")
             editor.remove("date_$i")
             editor.remove("time_$i")
+            editor.remove("repeat_$i")
         }
 
-        // Save the updated list
         reminders.forEachIndexed { i, item ->
             editor.putString("title_$i", item.title)
             editor.putString("date_$i", item.date)
             editor.putString("time_$i", item.time)
+            editor.putString("repeat_$i", item.repeatType)
         }
 
         editor.putInt(KEY_COUNT, reminders.size)
@@ -135,5 +134,4 @@ object ReminderStorage {
 
         return true
     }
-
 }

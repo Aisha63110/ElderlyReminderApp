@@ -24,18 +24,20 @@ class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Allow the splash image to use the whole screen
+        setContentView(R.layout.activity_splash)
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        // Hide the status bar and navigation bar
-        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        val controller = WindowInsetsControllerCompat(
+            window,
+            window.decorView
+        )
+
         controller.hide(WindowInsetsCompat.Type.systemBars())
+
         controller.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
-        setContentView(R.layout.activity_splash)
-
-        // Open Home after 3 seconds
         handler.postDelayed(navigateToHome, 3000)
     }
 

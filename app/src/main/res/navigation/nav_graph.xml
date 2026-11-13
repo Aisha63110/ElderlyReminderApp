@@ -5,24 +5,64 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/FirstFragment">
 
+    <!-- HOME -->
     <fragment
         android:id="@+id/FirstFragment"
         android:name="com.example.elderlyreminderapp.FirstFragment"
-        android:label="@string/first_fragment_label"
+        android:label="Home"
         tools:layout="@layout/fragment_first">
 
         <action
             android:id="@+id/action_FirstFragment_to_SecondFragment"
             app:destination="@id/SecondFragment" />
+
+        <action
+            android:id="@+id/action_FirstFragment_to_SettingsFragment"
+            app:destination="@id/SettingsFragment" />
+
+        <action
+            android:id="@+id/action_FirstFragment_to_AboutFragment"
+            app:destination="@id/AboutFragment" />
+
     </fragment>
+
+    <!-- ADD / EDIT REMINDER -->
     <fragment
         android:id="@+id/SecondFragment"
         android:name="com.example.elderlyreminderapp.SecondFragment"
-        android:label="@string/second_fragment_label"
+        android:label="Reminders"
         tools:layout="@layout/fragment_second">
 
         <action
             android:id="@+id/action_SecondFragment_to_FirstFragment"
             app:destination="@id/FirstFragment" />
+
     </fragment>
+
+    <!-- SETTINGS -->
+    <fragment
+        android:id="@+id/SettingsFragment"
+        android:name="com.example.elderlyreminderapp.SettingsFragment"
+        android:label="Settings"
+        tools:layout="@layout/fragment_settings">
+
+        <action
+            android:id="@+id/action_SettingsFragment_to_FirstFragment"
+            app:destination="@id/FirstFragment" />
+
+    </fragment>
+
+    <!-- ABOUT -->
+    <fragment
+        android:id="@+id/AboutFragment"
+        android:name="com.example.elderlyreminderapp.AboutFragment"
+        android:label="About"
+        tools:layout="@layout/fragment_about">
+
+        <action
+            android:id="@+id/action_AboutFragment_to_FirstFragment"
+            app:destination="@id/FirstFragment" />
+
+    </fragment>
+
 </navigation>

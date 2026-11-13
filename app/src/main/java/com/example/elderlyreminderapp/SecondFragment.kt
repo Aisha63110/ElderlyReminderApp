@@ -46,16 +46,21 @@ class SecondFragment : Fragment() {
         val editTitle = arguments?.getString("edit_title")
         val editDate = arguments?.getString("edit_date")
         val editTime = arguments?.getString("edit_time")
+        val editRepeat = arguments?.getString("edit_repeat") ?: "None"
 
         val isEditing = editTitle != null &&
                 editDate != null &&
                 editTime != null
 
+        binding.addEditHeading.text =
+            if (isEditing) "Edit Reminder 🌷" else "Add Reminder 🌷"
+
         if (isEditing) {
             originalReminder = Reminder(
                 editTitle!!,
                 editDate!!,
-                editTime!!
+                editTime!!,
+                editRepeat
             )
 
             selectedDate = editDate
@@ -80,15 +85,15 @@ class SecondFragment : Fragment() {
             setTextColor(darkGreen)
             textSize = 20f
         }
+        // Restore the repeat option when editing
+        val repeatOptions = resources.getStringArray(R.array.repeat_options)
 
-        binding.buttonSecond.text =
-            if (isEditing) "← Back" else "← Back to Home"
+        val selectedPosition = repeatOptions.indexOf(editRepeat)
 
-        binding.buttonSecond.setOnClickListener {
-            findNavController().navigate(
-                R.id.action_SecondFragment_to_FirstFragment
-            )
-        }
+        binding.repeatSpinner.setSelection(
+            if (selectedPosition >= 0) selectedPosition else 0
+        )
+
 
         binding.dateButton.setOnClickListener {
             showDatePicker()
@@ -100,6 +105,8 @@ class SecondFragment : Fragment() {
 
         binding.saveReminderButton.setOnClickListener {
             saveReminder()
+
+            TextSizeHelper.apply(binding.root, requireContext())
         }
     }
 
@@ -423,11 +430,20 @@ class SecondFragment : Fragment() {
             return
         }
 
+        val repeatType = when (binding.repeatSpinner.selectedItemPosition) {
+            1 -> "Daily"
+            2 -> "Weekly"
+            3 -> "Monthly"
+            else -> "None"
+        }
+
         val reminder = Reminder(
             title,
             selectedDate,
-            selectedTime
+            selectedTime,
+            repeatType
         )
+
 
         val context = requireContext()
 
